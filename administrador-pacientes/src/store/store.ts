@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { DraftPatient, Patient } from '../types'
 import { v4 as uuidv4 } from 'uuid'
-import { devtools } from 'zustand/middleware'
+import { createJSONStorage, devtools, persist } from 'zustand/middleware'
 
 type PatientState = {
     patients: Patient[],
@@ -16,31 +16,37 @@ const createPatient = (patient: DraftPatient): Patient => {
     return { ...patient, id: uuidv4() }
 }
 
-export const usePatientStore = create<PatientState>()(devtools((set) => ({
-    activeId: '',
-    patients: [],
-    addPatient: (data) => set((state) => ({
-        patients: [...state.patients, createPatient(data)]
-    })),
-    deletePatient: (id) => set((state) => ({
-        patients: state.patients.filter((item) => {
-            return item.id !== id
+export const usePatientStore = create<PatientState>()(
+    devtools(
+        persist(
+            (set) => ({
+                activeId: '',
+                patients: [],
+                addPatient: (data) => set((state) => ({
+                    patients: [...state.patients, createPatient(data)]
+                })),
+                deletePatient: (id) => set((state) => ({
+                    patients: state.patients.filter((item) => {
+                        return item.id !== id
+                    })
+                })),
+                getPatientById: (id) => {
+                    set(() => ({
+                        activeId: id
+                    }))
+                },
+                updatePatient: (data) => {
+                    set((state) => ({
+                        patients: state.patients.map(item => (
+                            item.id === state.activeId ? { id: state.activeId, ...data } : item)),
+                        activeId: ''
+                    }))
+                }
+            }), {
+            name: 'patient-storage',
+            storage: createJSONStorage(() => sessionStorage)
         })
-    })),
-    getPatientById: (id) => {
-        set(() => ({
-            activeId: id
-        }))
-    },
-    updatePatient: (data) => {
-        set((state) => ({
-            patients: state.patients.map(item => (
-                item.id === state.activeId ? { id: state.activeId, ...data } : item)),
-            activeId: ''
-        }))
-    }
-}
-)))
+    ))
 
 // function Counter() {
 // const { count, inc } = useStore()
