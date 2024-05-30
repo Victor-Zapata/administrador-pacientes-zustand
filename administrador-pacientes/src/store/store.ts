@@ -1,22 +1,46 @@
 import { create } from 'zustand'
-import { DraftPacient, Pacient } from '../types'
+import { DraftPatient, Patient } from '../types'
 import { v4 as uuidv4 } from 'uuid'
+import { devtools } from 'zustand/middleware'
 
-type PacientState = {
-    pacients: Pacient[],
-    addPacient: (data: DraftPacient) => void
+type PatientState = {
+    patients: Patient[],
+    addPatient: (data: DraftPatient) => void,
+    deletePatient: (id: Patient['id']) => void,
+    activeId: Patient['id'],
+    getPatientById: (id: Patient['id']) => void,
+    updatePatient: (data: DraftPatient) => void
 }
 
-const createPacient = (pacient: DraftPacient): Pacient => {
-    return { ...pacient, id: uuidv4() }
+const createPatient = (patient: DraftPatient): Patient => {
+    return { ...patient, id: uuidv4() }
 }
 
-export const usePacientStore = create<PacientState>((set) => ({
-    pacients: [],
-    addPacient: (data) => set((state) => ({ 
-        pacients: [...state.pacients, createPacient(data)] 
-    }))
-}))
+export const usePatientStore = create<PatientState>()(devtools((set) => ({
+    activeId: '',
+    patients: [],
+    addPatient: (data) => set((state) => ({
+        patients: [...state.patients, createPatient(data)]
+    })),
+    deletePatient: (id) => set((state) => ({
+        patients: state.patients.filter((item) => {
+            return item.id !== id
+        })
+    })),
+    getPatientById: (id) => {
+        set(() => ({
+            activeId: id
+        }))
+    },
+    updatePatient: (data) => {
+        set((state) => ({
+            patients: state.patients.map(item => (
+                item.id === state.activeId ? { id: state.activeId, ...data } : item)),
+            activeId: ''
+        }))
+    }
+}
+)))
 
 // function Counter() {
 // const { count, inc } = useStore()
