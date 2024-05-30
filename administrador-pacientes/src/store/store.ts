@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { DraftPatient, Patient } from '../types'
 import { v4 as uuidv4 } from 'uuid'
-import { createJSONStorage, devtools, persist } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 
 type PatientState = {
     patients: Patient[],
@@ -43,17 +43,6 @@ export const usePatientStore = create<PatientState>()(
                     }))
                 }
             }), {
-            name: 'patient-storage',
-            storage: createJSONStorage(() => sessionStorage)
+            name: 'patient-storage'
         })
     ))
-
-// function Counter() {
-// const { count, inc } = useStore()
-// return (
-//     <div>
-//         <span>{count}</span>
-//         <button onClick={inc}>one up</button>
-//     </div>
-// )
-// }
